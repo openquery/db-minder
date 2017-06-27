@@ -1,0 +1,11 @@
+
+# after sending a message, check back a few seconds later to see if there was a reply. No reply = send again. No reply again = Log.
+# This will apply to only some messages.
+db_status_report (should be replied with OK)
+make_primary (should be replied with a new db_status_report)
+
+
+Now need to do the arbitrator figuring.
+And the server responding to the make primary call.
+
+
