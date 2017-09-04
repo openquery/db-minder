@@ -18,13 +18,6 @@ use Class::Tiny qw(
 my %wakers;
 
 
-#sub BUILD {
-#    my $self = shift;
-#    push @wakers, $self;
-#    $self->set_wakeup(3);
-#}
-
-
 
 sub  wakethem {
     # Look at all the wakers. If they need attention, give it.
@@ -49,7 +42,7 @@ sub  wakethem {
 	my $waker = $wakers{$key};
 	# print "Considering $waker->{wakeup_time}\n";
 	if ($waker->{wakeup_time} == 0) {
-	    print "Deleting waker\n";
+	    # print "Deleting waker\n";
 	    delete $wakers{$key};
 	} else {
 	    if ($waker->{wakeup_time} < $first_wakeup) {

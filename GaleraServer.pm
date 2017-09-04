@@ -14,7 +14,7 @@ use DBI;
 #   datacentre: special case of partial - all of this DC nodes are in cluster, none of other DC
 #   down: this node is down - so it doesn't matter what other nodes are up to. 
 use ClusterConfig;
-use parent 'Wakeup';
+use parent 'Node';
 use Class::Tiny qw(
  status_running
  status_serving
@@ -50,11 +50,8 @@ use Class::Tiny qw(
  }
 ;
 
-my $singleton;
-
 sub BUILD {
     my $self=shift;
-    $singleton = $self;
     $self->{status_running} = 'unknown';
     $self->{status_serving} = 'unknown';
     $self->{status_primary} = 'unknown';
@@ -62,38 +59,21 @@ sub BUILD {
     $self->set_wakeup('poll',1);
     $self->{wsrep_cluster_name} = 'unknown';
     $self->{wsrep_node_name} = 'unknown';
+
+    ClusterConfig::create_Clients();
+    print "BUILD in GaleraServer has run.";
 }
+
 
 sub connect {
     my $self = shift;
     $self->{dbh} = DBI->connect($self->DBI_string, $self->User, $self->Password,{'RaiseError' => 0});
 }
 
-#sub config {
-#    my $self = shift;
-#    $self->{config_ip} = shift;
-#    $self->{config_cluster} = shift;
-#    $self->{config_cluster_size} = 0;
-#    my $ip = "|$self->{config_ip}|";
-#    foreach my $i (0 .. @{$self->{config_cluster}} - 1 ) {#
-##
-#	my $peers = $self->{config_cluster}->[$i];#
-#	my $count =  ($peers =~ tr/|//) - 1;
-#	$self->{config_cluster_size} += $count;
-#	if (index($peers, $ip) != -1) {
-#	    $self->{config_datacentre} = $i;
-#	    $self->{config_local_cluster_size} = $count;
-#	} 
-#
-#    }
-#    # Put some loggging info about what config we are running.
-#    
-# 
-#}
 
 sub wsrep_notify_cmd {
     my @parms = shift;
-    my $self = $singleton;
+    my $self = single();
    
     if ( shift @parms ne '--status') {
 	print "status not found\n";
@@ -126,8 +106,8 @@ sub wsrep_notify_cmd {
     $self->{'notify_members'} = shift @parms;
 
     $self->poll();
-
 }
+
 
 sub poll {
     my $self = shift;
@@ -202,9 +182,11 @@ sub poll {
     if ($previous_status ne $current_status) {
 	print "New status $current_status\n";
 	ServerArbitrator->new_status();
+	ServerClient->new_status();
     }
     $self->set_wakeup('poll',6);
 }
+
 
 sub deduce_status_group {
     my $self = shift;
@@ -261,10 +243,12 @@ sub deduce_status_group {
     return;
 }
 
+
 sub get_status {
     my $self = shift;
     return "$self->{wsrep_cluster_name} $self->{wsrep_node_name} $self->{status_running} $self->{status_serving} $self->{status_primary} $self->{status_group}";
 }
+
 
 sub make_primary {
     my $self = shift;

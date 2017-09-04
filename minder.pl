@@ -31,12 +31,25 @@ use IO::Socket::INET;
 use IO::Select;
 
 use Wakeup;
-use GaleraServer;
-use GaleraArbitrator;
+use Node;
 use Correspondent;
-use ServerArbitrator;
-use ServerNotify;
+
+use GaleraArbitrator;
 use ArbitratorServer;
+
+use GaleraClient;
+use ClientServer;
+
+use GaleraServer;
+use ServerArbitrator;
+use ServerClient;
+use ServerCommand;
+
+use GaleraCommand;
+use CommandServer;
+use CommandClient;
+use CommandArbitrator;
+
 
 use ClusterConfig;
 # flush after every write
@@ -44,6 +57,14 @@ $| = 1;
 
 my ($socket,$received_data);
 my ($peeraddress,$peerport);
+
+
+my $this_node = ClusterConfig::node();
+if ( defined $this_node ) {
+    print "Node is defined";
+} else {
+    print "Node is not defined";
+}
 
 
 #  we call IO::Socket::INET->new() to create the UDP Socket and bound 
@@ -56,8 +77,9 @@ Proto => 'udp',
 
 Correspondent->initialise($socket);
 
+my $my_type = $this_node->{type};
+print "Starting a $my_type\n";
 if ( ClusterConfig::node()->{type} eq 'Server' ) {
-    print "Starting a server\n";
     my $local_server = GaleraServer->new();
     my $arbitrator = new ServerArbitrator({server => $local_server});
     $arbitrator->register();
@@ -68,9 +90,12 @@ if ( ClusterConfig::node()->{type} eq 'Arbitrator' ) {
     my $local_arbitrator = GaleraArbitrator->new();
 }
 
-if ( ClusterConfig::node()->{minder_port} eq 'Client' ) {
-    # the module to figure the weightings and communicate with glb
-    # a module to talk with each server
+if ( ClusterConfig::node()->{type} eq 'Client' ) {
+    my $local_client = GaleraClient->new();
+}
+
+if ( ClusterConfig::node()->{type} eq 'Command' ) {
+    my $local_client = GaleraCommand->new();
 }
 
 

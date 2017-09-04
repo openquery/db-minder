@@ -1,5 +1,5 @@
-package ArbitratorServer;
-# This class runs on the arbitrator, to manage communications with the Server nodes.
+package CommandServer;
+# This class runs on the command line node, to manage communications with the Server nodes.
 # There will be an instance of this class for each Server.
 
 use strict;
@@ -22,8 +22,7 @@ sub receive {
     my $self = shift;
     my @parms = @{$_[0]};
     my $verb = shift @parms;
-    # print "Message is $verb from $self->{address}\n";
-    if ($verb eq 'db_status_report') {
+     if ($verb eq 'db_status_report') {
 	$self->db_status_report(\@parms);
     }
 }
@@ -41,7 +40,6 @@ sub db_status_report {
     $self->{status_primary} = shift @parms;
     $self->{status_group}   = shift @parms;
     print "We heard from peer_id $self->{peer_id}\n";
-    GaleraArbitrator::db_status_report($self->{peer_id},$self->{status_group},$self->{status_primary});
 }
 
 

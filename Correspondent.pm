@@ -32,6 +32,31 @@ sub initialise {
     $my_id =ClusterConfig::node()->{id};
 }
 
+sub create {
+    my $peer = shift;
+    my $correspondent;
+    my $address = $peer->{minder_ip};
+    my $port = $peer->{minder_port};
+    my $peer_type = $peer->{type};
+    my $peer_id = $peer->{id};
+    my $key = "|$peer_type|$peer_id|";
+
+    if ( exists $correspondents{$key} ) {
+        $correspondent = $correspondents{$key};
+        print "Found the correspondent for $key \n";
+    } else {
+        print "New correspondent with key $key\n";
+	my $Klass= "$my_type$peer_type";
+	$correspondent = $Klass->new({ peer_id => $peer_id});
+	$correspondent->{peer} = $peer;
+	$correspondent->{type} = $peer_type;
+	$correspondents{$key} = $correspondent;
+    }
+    $correspondent->{RecentStamp} = time();
+    return $correspondent;
+}
+
+
 sub find_correspondent {
     my $correspondent;
     my $address = shift;
@@ -70,14 +95,6 @@ sub register {
     $correspondents{$key} = $self;
 }
     
-
-sub subscribe {
-    my $address = shift;
-    my $correspondent = find_correspondent($address);
-    #print "And the address is $correspondent{address} \n";
-    my $answer = ${$correspondent}{port};
-    print "The port is $answer ! \n";
-}
 
 
 sub send {
@@ -125,8 +142,14 @@ sub send_one {
     if ($node->{type} eq $peer_type) {
 	$node->send($message,$ack_required);
     }
-    
-    
+}
+
+sub byTypeId {
+    my $peer_type = shift;
+    my $peer_id = shift;
+    my $key = "|$peer_type|$peer_id|";
+    my $correspondent = $correspondents{$key} ;
+    return $correspondent;
 }
 
 sub resend {
@@ -135,11 +158,11 @@ sub resend {
     $self->set_wakeup('resend',3);
     my $socket_address = sockaddr_in($self->{peer}->{minder_port}, inet_aton($self->{peer}->{minder_ip}));
     $socket->send($self->{protocol}, 0, $socket_address );
-    if ($self->{resend_count} % 200 == 2) {
+    if ($self->{resend_count} % 200 == 1) {
 	print "Re-Sending $self->{resend_count} $self->{protocol}\n";
     }
-
 }
+
 
 sub ack {
     my $self = shift;

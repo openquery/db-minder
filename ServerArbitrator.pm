@@ -50,10 +50,6 @@ sub receive {
 	$self->db_status_report();
     }
 
-    if ($verb eq 'OK') {
-	print "Verb is OK\n";
-	# No action for OK - we have recorded the timestamp of the message.
-    }
 }
 
 sub db_status_report {
@@ -63,12 +59,6 @@ sub db_status_report {
     $self->set_wakeup('db_status_report',30);
 }
 
-sub wakeup {
-    my $self = shift;
-    # Send a status report once per 5 minutes
-    print "ServerArbitrator is awake\n";
-    $self->db_status_report();
-}
 
 sub new_status {
     $singleton->db_status_report;

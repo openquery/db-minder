@@ -1,5 +1,5 @@
-package ArbitratorServer;
-# This class runs on the arbitrator, to manage communications with the Server nodes.
+package ClientServer;
+# This class runs on the Client, to manage communications with the Server nodes.
 # There will be an instance of this class for each Server.
 
 use strict;
@@ -14,7 +14,7 @@ use Class::Tiny qw(
 
 sub BUILD {
     my $self = shift;
-    $self->{peer_type}='Server';
+    $self->{peer_type}='Client';
 }
 
 
@@ -41,7 +41,7 @@ sub db_status_report {
     $self->{status_primary} = shift @parms;
     $self->{status_group}   = shift @parms;
     print "We heard from peer_id $self->{peer_id}\n";
-    GaleraArbitrator::db_status_report($self->{peer_id},$self->{status_group},$self->{status_primary});
+    #    GaleraClient:: tell client that a server is .. db_status_report($self->{peer_id},$self->{status_group},$self->{status_primary});
 }
 
 
